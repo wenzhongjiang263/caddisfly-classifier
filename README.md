@@ -1,70 +1,96 @@
-# Caddisfly Image Classifier — 免费展示版
+# Caddisfly Image Classifier
 
-这是用于 Streamlit Community Cloud 的网站运行仓库。访客打开网址即可上传图片识别，无需安装软件。
-模型为 ConvNeXt-Tiny，512 输入，25 个分类标签，包含 mottled 形态标签；使用两个检测器进行预处理。
-原始数据、训练缓存、旧模型和本机虚拟环境不包含在此部署仓库中。
+A graduation project developed in collaboration with a museum to support photograph-based caddisfly identification.
 
-## 1. 创建 GitHub 仓库
+**[Open the website](https://caddisfly-classifier.streamlit.app/)**
 
-登录 https://github.com ，点击右上角 `+` → `New repository`。
-仓库名建议 `caddisfly-classifier`，选择 Public，点击 `Create repository`。
-你的仓库链接将是 `https://github.com/你的用户名/caddisfly-classifier`。
+Visitors can use the website directly in a desktop or mobile browser. No software installation or model download is required on the visitor's device.
 
-把 `output/cloud_demo/repository` **里面的文件和目录**上传到仓库根目录。
-不要上传它的父目录，不要上传完整研究项目，也不要把 release_assets 放进源码仓库。
-保留 `.streamlit` 文件夹；使用 Git 或 GitHub Desktop 上传可避免遗漏隐藏文件。
-入口 `cloud_app.py`、`requirements.txt`、`packages.txt` 应位于仓库根目录。
+## Features
 
-## 2. 上传模型 Release
+- Upload a specimen photograph and view its predicted species, family and confidence score.
+- Compare the prediction with labelled reference photographs.
+- Add another view of the same specimen when the first prediction is uncertain.
+- Explore recorded distribution and observation months.
+- Enable map interaction explicitly; maps otherwise allow normal page scrolling.
 
-在仓库页面点击 Releases → Create a new release，标签填写 `model-v1`。
-上传 `output/cloud_demo/release_assets` 中的三个文件：
+## Model and interpretation
 
-- last_deploy_calibrated.pt
-- detector_yolo11n_512.pt
-- detector_yolo11n_1024.pt
+The application uses a ConvNeXt-Tiny multi-task classifier with 512-pixel inputs and 25 classification labels, including the mottled form of *Asmicridea edwardsii*. Two YOLO detectors support conservative specimen cropping. Inference includes horizontal-flip test-time augmentation and validation-calibrated single-image confidence thresholds.
 
-发布 Release。下载基地址是：
-`https://github.com/你的用户名/你的仓库名/releases/download/model-v1`
-Release 必须公开可下载；不要使用 Draft Release 或页面浏览地址 `/releases/tag/`。
-网站使用 `deployment/model_assets.json` 中的大小和 SHA-256 验证三个文件。
-无需访客下载，模型在云端首次进入识别页时自动下载。
+The 25 labels do not represent 25 distinct biological species. Confidence expresses the model's preference among supported labels; it does not independently verify identification or reliably reject unfamiliar species. Two-view scores are supporting evidence because an independent two-view acceptance threshold has not been calibrated.
 
-## 3. 部署到 Streamlit Community Cloud
+## Repository contents
 
-进入 https://share.streamlit.io ，登录并连接 GitHub。
-点击 Create app，选择仓库、实际分支名和入口 **cloud_app.py**。
-在 Advanced settings 中选择 **Python 3.12**。
-在 Secrets 中粘贴下面内容，替换真实用户名和仓库名：
+| Path | Purpose |
+| --- | --- |
+| `cloud_app.py` | Streamlit Community Cloud entry point |
+| `app.py` | Website interface and session workflow |
+| `inference.py` | Model loading, preprocessing and predictions |
+| `model_assets.py` | Verified model downloads |
+| `caddisfly_v2/` | Shared model, label and transform code |
+| `model/` | Active model selector and deployment metadata |
+| `deployment/` | Model checksums, configuration example and initial verification record |
+| `web_assets/` | Homepage image, species profiles and reference photographs |
+| `requirements.txt` | CPU runtime dependencies |
+| `packages.txt` | Linux system dependencies |
+| `.streamlit/config.toml` | Theme and server settings |
+
+This repository contains the website runtime. Original datasets, training caches, historical checkpoints and machine-specific virtual environments are excluded.
+
+## Model files
+
+Download the three assets from [Model Release v1](https://github.com/wenzhongjiang263/caddisfly-classifier/releases/tag/model-v1) when running locally:
+
+- `last_deploy_calibrated.pt`
+- `detector_yolo11n_512.pt`
+- `detector_yolo11n_1024.pt`
+
+Place them in `model/convnext_tiny_detector512/` without changing their names. On Community Cloud, the application downloads them automatically before the first identification. File sizes and SHA-256 checksums are checked against `deployment/model_assets.json`; incomplete or invalid downloads do not replace existing files.
+
+## Deploy on Streamlit Community Cloud
+
+1. Sign in at [Streamlit Community Cloud](https://share.streamlit.io/) and connect this GitHub repository.
+2. Select branch `main` and entry point `cloud_app.py`.
+3. In Advanced settings, select Python 3.12 for the locally tested runtime and add the configuration below to Secrets.
+4. Deploy and verify the complete identification workflow.
 
 ```toml
 [deployment]
-release_base_url = "https://github.com/你的用户名/你的仓库名/releases/download/model-v1"
+release_base_url = "https://github.com/wenzhongjiang263/caddisfly-classifier/releases/download/model-v1"
 ```
 
-点击 Deploy。成功后分享分配的 `.streamlit.app` 地址即可。
-如果出现条款、账户授权或隐私设置，请由账户持有人核对并完成。
+The current hosted application was deployed with Python 3.14.7, and its identification workflow and mobile access were confirmed by the project owner. Python 3.12 remains the locally tested version.
 
-## 4. 上线验收
+## Local use
 
-- 首页照片正常显示，开始识别能进入上传页。
-- 上传真实照片，CPU 模型正常加载并返回结果。
-- 低置信度时可补充同一标本的第二视角。
-- 联合结果、参考图、地图和重新识别正常工作。
-- 检查冷启动时间、识别时间及云端日志中的内存占用。
+Create a Python 3.12 virtual environment and install the dependencies:
 
-免费平台的速度、资源容量和休眠行为以实际运行和平台当时规则为准。
-若报内存不足，先查看日志，不要删除检测器或改变模型来掩盖问题。
-上传限制为 25 MB。首页使用项目指定原图，未压缩，较慢连接下加载可能较慢。
-展示版隐藏反馈表单，因为平台本地磁盘不用于长期保存反馈。
-本地研究项目仍保留原有反馈功能。
+```bash
+python -m venv .venv
+# Activate the environment using the command appropriate for your operating system.
+python -m pip install -r requirements.txt
+streamlit run app.py
+```
 
-## 本地准备与验证状态
+For local use, download the model files as described above. To reproduce cloud mode, save the deployment configuration in `.streamlit/secrets.toml` and run `streamlit run cloud_app.py`. Do not commit that local configuration file.
 
-部署目录由 `tools/prepare_cloud_demo.py` 生成，模型权重与源码分开放置。
-模型下载器有网络超时、文件大小及 SHA-256 校验，失败下载不会替换已有模型。
-已在 Windows Python 3.12 环境验证 CPU 模型推理；Linux 安装与平台容量需上线后验证。
+## Performance and limitations
 
-官方说明：
-- https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy
-- https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies
+- Cloud inference uses CPU. Response time depends on image size, available resources and concurrent requests.
+- Display previews are resized JPEGs cached within each user's session. Original uploaded bytes are retained for inference.
+- Uploads are limited to 25 MB in the cloud configuration.
+- The public demo hides feedback submission because local cloud storage is not used for long-term feedback retention.
+- Reference images are labelled examples from the project's development data, not independent identification evidence.
+- Free hosting may require a cold start. Open the site and perform a trial identification before a scheduled demonstration.
+
+## Validation
+
+The local project passed 45 tests after the preview optimization. Checks covered model loading, prediction outputs, two-view state, download verification and preservation of original inference inputs. The exported runtime was separately exercised with a real specimen photograph on CPU. Initial export checks are recorded in `deployment/verification.json`; that file describes the initial preparation stage rather than the current hosting status.
+
+After deploying updates, check image upload, single-image results, uncertain-result handling, second-view analysis, reference images, map interaction and resetting for a new specimen. The project owner confirmed that the optimized public website was usable on mobile.
+
+## Deployment references
+
+- [Deploy an application](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy)
+- [Configure dependencies](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/app-dependencies)
