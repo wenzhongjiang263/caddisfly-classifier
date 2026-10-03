@@ -709,7 +709,18 @@ def show_species_profile(prediction: Dict[str, Any], image_bytes: bytes | None,
             st.markdown("### Recorded distribution")
             if points:
                 frame = pd.DataFrame(points)
-                st.map(frame, latitude="latitude", longitude="longitude", color="#8A9D70", size=18)
+                map_key = f"distribution_map_{hashlib.sha1(species_name.encode()).hexdigest()[:8]}"
+                interactive = st.toggle("Explore interactive map", key=f"{map_key}_interactive")
+                if not interactive:
+                    # Let page scrolling pass through the map until interaction is requested.
+                    st.markdown(
+                        f"<style>.st-key-{map_key}, .st-key-{map_key} * "
+                        "{ pointer-events: none !important; touch-action: pan-y !important; }</style>",
+                        unsafe_allow_html=True,
+                    )
+                with st.container(key=map_key):
+                    st.map(frame, latitude="latitude", longitude="longitude", color="#8A9D70", size=18)
+                st.caption("Turn on the interactive map to pan and zoom. Turn it off to scroll the page freely.")
             countries = ", ".join(distribution.get("countries", [])) or "No mapped country record"
             regions = ", ".join(distribution.get("regions", [])[:8]) or "No mapped regional record"
             st.caption(f"Countries: {countries}. Regions represented in records: {regions}.")
