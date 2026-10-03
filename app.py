@@ -43,6 +43,7 @@ SESSION_KEYS = (
     "combined_prediction",
     "same_specimen_confirmed",
     "pair_nonce",
+    "preview_cache",
 )
 
 
@@ -437,6 +438,8 @@ def initialise_session_state() -> None:
             default_value = False
         elif key == "pair_nonce":
             default_value = 0
+        elif key == "preview_cache":
+            default_value = {}
         else:
             default_value = None
         st.session_state.setdefault(key, default_value)
@@ -801,21 +804,39 @@ def mini_result_card(title: str, prediction: Dict[str, Any]) -> None:
 
 
 def image_data_url(image_bytes: bytes) -> str:
+    """Create a display thumbnail without changing the original inference input."""
     image = load_image_from_bytes(image_bytes)
+    image.thumbnail((1200, 1200))
     buffer = io.BytesIO()
-    image.save(buffer, format="PNG")
+    image.convert("RGB").save(buffer, format="JPEG", quality=85)
     encoded = base64.b64encode(buffer.getvalue()).decode("ascii")
-    return f"data:image/png;base64,{encoded}"
+    return f"data:image/jpeg;base64,{encoded}"
+
+
+def cached_preview_url(image_bytes: bytes) -> str:
+    """Keep at most two previews in the current user's specimen session."""
+    cache = st.session_state.setdefault("preview_cache", {})
+    signature = hashlib.sha256(image_bytes).hexdigest()
+    if signature not in cache:
+        preview = image_data_url(image_bytes)
+        if len(cache) >= 2:
+            cache.pop(next(iter(cache)))
+        cache[signature] = preview
+    return cache[signature]
+
+
+@st.cache_data(max_entries=1, show_spinner=False)
+def home_image_data_url(modified_ns: int) -> str:
+    del modified_ns
+    return image_data_url((PACKAGE_ROOT / "web_assets/home_specimen.jpg").read_bytes())
 
 
 def preview_image(image_bytes: bytes, caption: str, compact: bool = False) -> None:
-    image = load_image_from_bytes(image_bytes)
-    del image
     class_name = "image-frame compact" if compact else "image-frame"
     st.markdown(
         f"""
         <div class="{class_name}">
-            <img src="{image_data_url(image_bytes)}" alt="{escape(caption)}">
+            <img src="{cached_preview_url(image_bytes)}" alt="{escape(caption)}">
             <div class="image-caption">{escape(caption)}</div>
         </div>
         """,
@@ -838,6 +859,7 @@ def store_first_upload(uploaded_file) -> None:
         st.session_state.second_prediction = None
         st.session_state.combined_prediction = None
         st.session_state.same_specimen_confirmed = False
+        st.session_state.preview_cache = {}
 
 
 def store_second_upload(uploaded_file) -> None:
@@ -905,7 +927,7 @@ def show_home_page() -> None:
         image_path = PACKAGE_ROOT / "web_assets/home_specimen.jpg"
         if image_path.is_file():
             st.markdown(
-                f'<div class="specimen-plate"><img src="{"data:image/jpeg;base64," + base64.b64encode(image_path.read_bytes()).decode("ascii")}" '
+                f'<div class="specimen-plate"><img src="{home_image_data_url(image_path.stat().st_mtime_ns)}" '
                 'alt="Caddisfly resting on a plant stem">'
                 '<div class="plate-label"><span class="plate-species">Caddisfly photograph</span>'
                 '<span>Project image</span></div></div>', unsafe_allow_html=True,
