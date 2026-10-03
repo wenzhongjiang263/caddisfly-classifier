@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-03",
+  "unit_tests": 41,
+  "unit_tests_passed": true,
+  "export_smoke_test_passed": true,
+  "cpu_example": "JKF_2019_04929.jpg",
+  "cpu_prediction": "Asmicridea edwardsii",
+  "cpu_prediction_and_render_seconds": 16.55,
+  "model_download_test": "Local Release responses; SHA-256 verified; actual GitHub transfer pending",
+  "verified_linux_cpu_wheel_availability": true,
+  "linux_installation_tested": false,
+  "community_cloud_deployed": false
+}

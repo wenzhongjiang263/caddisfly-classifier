@@ -1,0 +1,194 @@
+{
+  "artifact_version": 2,
+  "checkpoint": {
+    "file": "last_deploy_calibrated.pt",
+    "bytes": 111452261,
+    "sha256": "d64333e486bd215dfec3b747b46316711d8fc7e180f06ac80655903a7d874e57"
+  },
+  "model_name": "convnext_tiny_multitask",
+  "backbone": "convnext_tiny",
+  "primary_head": "species",
+  "image_size": 512,
+  "crop_mode": "letterbox",
+  "normalization_mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "normalization_std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "labels": {
+    "species": [
+      "Aphilorheithrus stepheni",
+      "Apsilochorema obliquum",
+      "Asmicridea edwardsii",
+      "Asmicridea edwardsii (mottled)",
+      "Atriplectides dubius",
+      "Austrheithrus glymma",
+      "Caenota plicata",
+      "Cheumatopsyche modica",
+      "Costora delora",
+      "Ecnomus russellius",
+      "Ethochorema turbidum",
+      "Hampa patona",
+      "Hydrobiosella gibbera",
+      "Koetonga clivicola",
+      "Kosrheithrus tillyardi",
+      "Lectrides varians",
+      "Notalina bifaria",
+      "Plectrocnemia australica",
+      "Smicrophylax parvula",
+      "Tamasia variegata",
+      "Taschorema evansi",
+      "Tasimia palpata",
+      "Triplectides ciuskus",
+      "Triplectides similis",
+      "Ulmerochorema seonum"
+    ],
+    "sex_statuses": [
+      "female",
+      "male",
+      "mating"
+    ],
+    "morph_statuses": [
+      "typical",
+      "mottled"
+    ],
+    "families": [
+      "Atriplectidae",
+      "Calocidae",
+      "Conoesucidae",
+      "Ecnomidae",
+      "Hydrobiosidae",
+      "Hydropsychidae",
+      "Leptoceridae",
+      "Philopotamidae",
+      "Philorheithridae",
+      "Polycentropodidae",
+      "Tasimiidae"
+    ],
+    "species_to_family": {
+      "Aphilorheithrus stepheni": "Philorheithridae",
+      "Apsilochorema obliquum": "Hydrobiosidae",
+      "Asmicridea edwardsii": "Hydropsychidae",
+      "Atriplectides dubius": "Atriplectidae",
+      "Austrheithrus glymma": "Philorheithridae",
+      "Caenota plicata": "Calocidae",
+      "Cheumatopsyche modica": "Hydropsychidae",
+      "Costora delora": "Conoesucidae",
+      "Ecnomus russellius": "Ecnomidae",
+      "Ethochorema turbidum": "Hydrobiosidae",
+      "Hampa patona": "Conoesucidae",
+      "Hydrobiosella gibbera": "Philopotamidae",
+      "Koetonga clivicola": "Hydrobiosidae",
+      "Kosrheithrus tillyardi": "Philorheithridae",
+      "Lectrides varians": "Leptoceridae",
+      "Notalina bifaria": "Leptoceridae",
+      "Plectrocnemia australica": "Polycentropodidae",
+      "Smicrophylax parvula": "Hydropsychidae",
+      "Tamasia variegata": "Calocidae",
+      "Taschorema evansi": "Hydrobiosidae",
+      "Tasimia palpata": "Tasimiidae",
+      "Triplectides ciuskus": "Leptoceridae",
+      "Triplectides similis": "Leptoceridae",
+      "Ulmerochorema seonum": "Hydrobiosidae",
+      "Asmicridea edwardsii (mottled)": "Hydropsychidae"
+    }
+  },
+  "heads": {
+    "species": {
+      "output_key": "species_logits",
+      "label_field": "labels.species",
+      "primary": true
+    },
+    "sex": {
+      "output_key": "sex_logits",
+      "class_names": [
+        "female",
+        "male"
+      ]
+    },
+    "mating": {
+      "output_key": "mating_logits",
+      "class_names": [
+        "not_mating",
+        "mating"
+      ]
+    },
+    "morph": {
+      "output_key": "morph_logits",
+      "class_names": [
+        "typical",
+        "mottled"
+      ],
+      "applicable_species": [
+        "Asmicridea edwardsii"
+      ]
+    }
+  },
+  "training_config": {
+    "backbone": "convnext_tiny",
+    "image_size": 512,
+    "crop_mode": "letterbox",
+    "batch_size": 8,
+    "accumulation_steps": 4,
+    "epochs": 45,
+    "freeze_epochs": 3,
+    "warmup_epochs": 3,
+    "patience": 10,
+    "backbone_lr": 3e-05,
+    "head_lr": 0.0003,
+    "frozen_head_lr": 0.001,
+    "weight_decay": 0.05,
+    "label_smoothing": 0.05,
+    "sex_loss_weight": 0.25,
+    "mating_loss_weight": 0.05,
+    "morph_loss_weight": 0.1,
+    "dropout": 0.2,
+    "num_workers": 4,
+    "seed": 42,
+    "pretrained": true,
+    "use_balanced_sampler": false,
+    "amp": true,
+    "gradient_clip_norm": 1.0,
+    "smoke_limit": null
+  },
+  "calibration": {
+    "species_temperature": 0.1056230366230011,
+    "validation_ece": 0.001528989989310503
+  },
+  "thresholds": {
+    "species_single": 0.922447681427002,
+    "validation_coverage": 0.9977011494252873,
+    "validation_accepted_accuracy": 1.0
+  },
+  "inference": {
+    "horizontal_flip_tta": true,
+    "device": "auto",
+    "detector_preprocess": {
+      "enabled": true,
+      "model_files": [
+        "detector_yolo11n_512.pt",
+        "detector_yolo11n_1024.pt"
+      ],
+      "inference_sizes": [
+        512,
+        1024
+      ],
+      "confidence_threshold": 0.25,
+      "agreement_iou_threshold": 0.7,
+      "margin_ratio": 0.15,
+      "max_side": 1600,
+      "output_size": 512,
+      "pad_fill": [
+        124,
+        116,
+        104
+      ],
+      "fallback": "original_image"
+    }
+  }
+}

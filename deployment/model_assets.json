@@ -1,0 +1,19 @@
+{
+  "assets": [
+    {
+      "path": "model/convnext_tiny_detector512/last_deploy_calibrated.pt",
+      "bytes": 111452261,
+      "sha256": "d64333e486bd215dfec3b747b46316711d8fc7e180f06ac80655903a7d874e57"
+    },
+    {
+      "path": "model/convnext_tiny_detector512/detector_yolo11n_512.pt",
+      "bytes": 5445018,
+      "sha256": "4717df003685325448d9db4badf0a61160e80d48729118ce460f9dd2c15ce8d5"
+    },
+    {
+      "path": "model/convnext_tiny_detector512/detector_yolo11n_1024.pt",
+      "bytes": 5514138,
+      "sha256": "c9f0440ad5f60ef81e8dcf48b01670a5ec454ee999b525aa0ce197b9b56d366f"
+    }
+  ]
+}
